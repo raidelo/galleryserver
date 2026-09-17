@@ -1,7 +1,12 @@
+// @ts-check
+
 /* Galería local — frontend. Habla con el backend por /api/*. */
 (function () {
   "use strict";
 
+  /**
+   * @param {string} id
+   */
   const $ = (id) => document.getElementById(id);
 
   const els = {
@@ -41,6 +46,11 @@
   };
 
   const store = {
+    /**
+     * @param {string} key
+     * @param {string | null} fallback
+     * @returns {string | null}
+     */
     get(key, fallback) {
       try {
         const v = localStorage.getItem(key);
@@ -49,6 +59,10 @@
         return fallback;
       }
     },
+    /**
+     * @param {string} key
+     * @param {string} value
+     */
     set(key, value) {
       try {
         localStorage.setItem(key, value);
@@ -56,13 +70,33 @@
     },
   };
 
-  const mediaURL = (path, download) =>
+  /**
+   * @param {string | number | boolean} path
+   * @param {boolean} download
+   * @returns {string}
+   */
+  const mediaURL = (path, download = false) =>
     "/media?p=" + encodeURIComponent(path) + (download ? "&dl=1" : "");
+  /**
+   * @param {string | number | boolean} path
+   * @param {number} size
+   * @returns {string}
+   */
   const thumbURL = (path, size) =>
     "/api/thumb?p=" + encodeURIComponent(path) + "&s=" + (size || 360);
 
+  /**
+   * @param {number} n
+   * @param {string} one
+   * @param {string} many
+   * @returns {string}
+   */
   const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
 
+  /**
+   * @param {number} bytes
+   * @returns {string}
+   */
   function humanSize(bytes) {
     const units = ["B", "kB", "MB", "GB"];
     let value = bytes,
@@ -80,6 +114,10 @@
 
   /* ------------------------------------------------------------ navegación */
 
+  /**
+   * @param {string | number | boolean} path
+   * @param {boolean} push
+   */
   async function load(path, push) {
     setState("Leyendo la carpeta…");
     let data;
@@ -159,6 +197,9 @@
     }
   }
 
+  /**
+   * @param {string} message
+   */
   function setState(message) {
     els.state.hidden = !message;
     els.state.textContent = message || "";
