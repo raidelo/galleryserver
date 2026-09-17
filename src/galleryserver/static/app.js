@@ -1,4 +1,4 @@
-/* Galería local — frontend. Habla con el backend por /api/*, sin plantillas. */
+/* Galería local — frontend. Habla con el backend por /api/*. */
 (function () {
   "use strict";
 
@@ -35,17 +35,25 @@
   const state = {
     path: "",
     data: null,
-    items: [],      // los visibles tras filtrar: lo que recorre el visor
+    items: [], // los visibles tras filtrar: lo que recorre el visor
     index: -1,
     config: { thumbnails: true, videoThumbnails: true, root: "" },
   };
 
   const store = {
     get(key, fallback) {
-      try { const v = localStorage.getItem(key); return v === null ? fallback : v; }
-      catch (_) { return fallback; }
+      try {
+        const v = localStorage.getItem(key);
+        return v === null ? fallback : v;
+      } catch (_) {
+        return fallback;
+      }
     },
-    set(key, value) { try { localStorage.setItem(key, value); } catch (_) {} },
+    set(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (_) {}
+    },
   };
 
   const mediaURL = (path, download) =>
@@ -57,9 +65,17 @@
 
   function humanSize(bytes) {
     const units = ["B", "kB", "MB", "GB"];
-    let value = bytes, unit = 0;
-    while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++; }
-    return (value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)) + " " + units[unit];
+    let value = bytes,
+      unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit++;
+    }
+    return (
+      (value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)) +
+      " " +
+      units[unit]
+    );
   }
 
   /* ------------------------------------------------------------ navegación */
@@ -80,7 +96,8 @@
 
     state.path = data.path;
     state.data = data;
-    document.title = (data.path || state.config.root || "Galería") + " — Galería";
+    document.title =
+      (data.path || state.config.root || "Galería") + " — Galería";
 
     if (push !== false) {
       const url = data.path ? "?p=" + encodeURIComponent(data.path) : "/";
@@ -105,7 +122,10 @@
       link.href = crumb.path ? "?p=" + encodeURIComponent(crumb.path) : "/";
       link.textContent = crumb.name;
       if (i === crumbs.length - 1) link.setAttribute("aria-current", "page");
-      link.addEventListener("click", (ev) => { ev.preventDefault(); load(crumb.path); });
+      link.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        load(crumb.path);
+      });
       els.crumbs.appendChild(link);
     });
   }
@@ -117,17 +137,23 @@
     if (!data) return;
 
     const needle = els.filter.value.trim().toLowerCase();
-    const folders = data.folders.filter((f) => !needle || f.name.toLowerCase().includes(needle));
-    const items = data.items.filter((f) => !needle || f.name.toLowerCase().includes(needle));
+    const folders = data.folders.filter(
+      (f) => !needle || f.name.toLowerCase().includes(needle),
+    );
+    const items = data.items.filter(
+      (f) => !needle || f.name.toLowerCase().includes(needle),
+    );
     state.items = items;
 
     renderFolders(folders);
     renderGrid(items);
 
     if (!folders.length && !items.length) {
-      setState(needle
-        ? "Nada coincide con «" + els.filter.value.trim() + "» aquí."
-        : "Esta carpeta no tiene imágenes, GIFs, vídeos ni subcarpetas.");
+      setState(
+        needle
+          ? "Nada coincide con «" + els.filter.value.trim() + "» aquí."
+          : "Esta carpeta no tiene imágenes, GIFs, vídeos ni subcarpetas.",
+      );
     } else {
       setState(null);
     }
@@ -143,7 +169,11 @@
     els.foldersSection.hidden = folders.length === 0;
     if (!folders.length) return;
 
-    els.foldersTitle.textContent = plural(folders.length, "carpeta", "carpetas");
+    els.foldersTitle.textContent = plural(
+      folders.length,
+      "carpeta",
+      "carpetas",
+    );
 
     const frag = document.createDocumentFragment();
     for (const folder of folders) {
@@ -154,18 +184,25 @@
 
       const parts = [];
       if (folder.media) {
-        parts.push(folder.partial ? "más de " + folder.media + " archivos"
-                                  : plural(folder.media, "archivo", "archivos"));
+        parts.push(
+          folder.partial
+            ? "más de " + folder.media + " archivos"
+            : plural(folder.media, "archivo", "archivos"),
+        );
       }
-      if (folder.subfolders) parts.push(plural(folder.subfolders, "carpeta", "carpetas"));
-      node.querySelector(".folder-count").textContent = parts.join(", ") || "vacía";
+      if (folder.subfolders)
+        parts.push(plural(folder.subfolders, "carpeta", "carpetas"));
+      node.querySelector(".folder-count").textContent =
+        parts.join(", ") || "vacía";
 
       const mosaic = node.querySelector(".mosaic");
       mosaic.dataset.count = folder.thumbs.length;
       if (!folder.thumbs.length) {
         const empty = document.createElement("span");
         empty.className = "void";
-        empty.textContent = folder.subfolders ? "Sólo subcarpetas" : "Sin vista previa";
+        empty.textContent = folder.subfolders
+          ? "Sólo subcarpetas"
+          : "Sin vista previa";
         mosaic.appendChild(empty);
       } else {
         for (const thumb of folder.thumbs) {
@@ -176,12 +213,17 @@
           img.src = thumbURL(thumb, 300);
           // Si no hay miniatura (p. ej. un vídeo sin ffmpeg) la celda queda vacía,
           // pero se conserva para que el mosaico no se descuadre.
-          img.addEventListener("error", () => img.removeAttribute("src"), { once: true });
+          img.addEventListener("error", () => img.removeAttribute("src"), {
+            once: true,
+          });
           mosaic.appendChild(img);
         }
       }
 
-      node.addEventListener("click", (ev) => { ev.preventDefault(); load(folder.path); });
+      node.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        load(folder.path);
+      });
       frag.appendChild(node);
     }
     els.folders.appendChild(frag);
@@ -192,8 +234,11 @@
     els.mediaSection.hidden = items.length === 0;
     if (!items.length) return;
 
-    const counts = items.reduce((acc, item) => (acc[item.kind]++, acc),
-      { image: 0, gif: 0, video: 0 });
+    const counts = items.reduce((acc, item) => (acc[item.kind]++, acc), {
+      image: 0,
+      gif: 0,
+      video: 0,
+    });
     const label = [];
     if (counts.image) label.push(plural(counts.image, "imagen", "imágenes"));
     if (counts.gif) label.push(counts.gif + " GIF");
@@ -211,7 +256,9 @@
       node.title = item.name + " · " + humanSize(item.size);
       node.setAttribute("aria-label", item.name);
       img.src = thumbURL(item.path, size);
-      img.addEventListener("error", () => showFallback(node, img, item), { once: true });
+      img.addEventListener("error", () => showFallback(node, img, item), {
+        once: true,
+      });
 
       if (item.kind !== "image") {
         badge.hidden = false;
@@ -236,8 +283,10 @@
     const name = document.createElement("strong");
     name.textContent = item.name;
     const hint = document.createElement("span");
-    hint.textContent = item.kind === "video" ? "Vídeo · " + humanSize(item.size)
-                                             : "Sin vista previa";
+    hint.textContent =
+      item.kind === "video"
+        ? "Vídeo · " + humanSize(item.size)
+        : "Sin vista previa";
     box.append(name, hint);
     tile.appendChild(box);
   }
@@ -247,7 +296,9 @@
     const still = img.src;
     let timer = null;
     tile.addEventListener("pointerenter", () => {
-      timer = setTimeout(() => { img.src = mediaURL(item.path); }, 120);
+      timer = setTimeout(() => {
+        img.src = mediaURL(item.path);
+      }, 120);
     });
     tile.addEventListener("pointerleave", () => {
       clearTimeout(timer);
@@ -257,7 +308,8 @@
 
   // Vista previa del vídeo al pasar por encima, sin sonido.
   function attachVideoHover(tile, item) {
-    let timer = null, video = null;
+    let timer = null,
+      video = null;
     tile.addEventListener("pointerenter", () => {
       timer = setTimeout(() => {
         if (video) return;
@@ -273,7 +325,11 @@
     });
     tile.addEventListener("pointerleave", () => {
       clearTimeout(timer);
-      if (video) { video.pause(); video.remove(); video = null; }
+      if (video) {
+        video.pause();
+        video.remove();
+        video = null;
+      }
     });
   }
 
@@ -286,7 +342,7 @@
 
     els.stage.textContent = "";
     els.viewerName.textContent = item.name;
-    els.viewerCount.textContent = (index + 1) + " de " + state.items.length;
+    els.viewerCount.textContent = index + 1 + " de " + state.items.length;
     els.viewerDownload.href = mediaURL(item.path, true);
     els.viewerPrev.disabled = index === 0;
     els.viewerNext.disabled = index === state.items.length - 1;
@@ -300,7 +356,7 @@
       els.stage.appendChild(video);
     } else {
       const img = document.createElement("img");
-      img.src = mediaURL(item.path);   // siempre el archivo completo, sin recomprimir
+      img.src = mediaURL(item.path); // siempre el archivo completo, sin recomprimir
       img.alt = item.name;
       img.addEventListener("click", () => img.classList.toggle("actual"));
       els.stage.appendChild(img);
@@ -321,7 +377,7 @@
 
   function close() {
     els.viewer.hidden = true;
-    els.stage.textContent = "";  // corta la reproducción del vídeo
+    els.stage.textContent = ""; // corta la reproducción del vídeo
     document.body.style.overflow = "";
     state.index = -1;
   }
@@ -351,10 +407,11 @@
     applyTile(els.zoom.value);
     store.set("galeria.tile", els.zoom.value);
   });
-  els.zoom.addEventListener("change", render);  // repide miniaturas a la nueva escala
+  els.zoom.addEventListener("change", render); // repide miniaturas a la nueva escala
 
   els.theme.addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    const next =
+      document.documentElement.dataset.theme === "light" ? "dark" : "light";
     applyTheme(next);
     store.set("galeria.theme", next);
   });
@@ -381,15 +438,20 @@
         els.filter.value = "";
         els.filter.blur();
         render();
-      } else if (ev.key === "Backspace" && document.activeElement !== els.filter) {
+      } else if (
+        ev.key === "Backspace" &&
+        document.activeElement !== els.filter
+      ) {
         const crumbs = state.data && state.data.crumbs;
         if (crumbs && crumbs.length > 1) load(crumbs[crumbs.length - 2].path);
       }
       return;
     }
     if (ev.key === "Escape") close();
-    else if (ev.key === "ArrowRight" || ev.key === " ") { ev.preventDefault(); step(1); }
-    else if (ev.key === "ArrowLeft") step(-1);
+    else if (ev.key === "ArrowRight" || ev.key === " ") {
+      ev.preventDefault();
+      step(1);
+    } else if (ev.key === "ArrowLeft") step(-1);
     else if (ev.key === "Home") open(0);
     else if (ev.key === "End") open(state.items.length - 1);
   });
@@ -406,14 +468,21 @@
 
   (async function start() {
     const saved = store.get("galeria.theme", null);
-    applyTheme(saved || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
+    applyTheme(
+      saved ||
+        (matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : "dark"),
+    );
     els.zoom.value = store.get("galeria.tile", "220");
     applyTile(els.zoom.value);
     applyLayout(store.get("galeria.masonry", "false") === "true");
 
     try {
       state.config = await (await fetch("/api/config")).json();
-    } catch (_) { /* valores por defecto */ }
+    } catch (_) {
+      /* valores por defecto */
+    }
 
     await load(pathFromURL(), false);
     history.replaceState({ path: state.path }, "", location.href);
