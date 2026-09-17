@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Galería</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%231b1f24'/><circle cx='6' cy='6' r='2' fill='%23c9a227'/><path d='M2 13l4-4 3 3 3-3 2 2v2z' fill='%238b99a6'/></svg>">
+</head>
+<body>
+  <header class="bar">
+    <nav class="crumbs" id="crumbs" aria-label="Ruta"></nav>
+
+    <div class="bar-tools">
+      <label class="field">
+        <span class="sr-only">Filtrar por nombre</span>
+        <input id="filter" type="search" placeholder="Filtrar" autocomplete="off" spellcheck="false">
+      </label>
+
+      <label class="field zoom" title="Tamaño de las miniaturas">
+        <span class="sr-only">Tamaño de las miniaturas</span>
+        <input id="zoom" type="range" min="120" max="420" step="20" value="220">
+      </label>
+
+      <button id="layout" class="ghost" type="button" aria-pressed="false">Mosaico</button>
+      <button id="theme" class="ghost" type="button">Tema claro</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="folders-section" class="section" hidden>
+      <h2 class="section-title" id="folders-title">Carpetas</h2>
+      <div class="folders" id="folders"></div>
+    </section>
+
+    <section id="media-section" class="section" hidden>
+      <h2 class="section-title" id="media-title">Archivos</h2>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <p class="state" id="state" hidden></p>
+  </main>
+
+  <div class="viewer" id="viewer" hidden>
+    <div class="viewer-bar">
+      <span class="viewer-name" id="viewer-name"></span>
+      <span class="viewer-count" id="viewer-count"></span>
+      <a class="ghost" id="viewer-download" href="#" download>Descargar</a>
+      <button class="ghost" id="viewer-close" type="button" aria-label="Cerrar">Cerrar</button>
+    </div>
+    <button class="nav prev" id="viewer-prev" type="button" aria-label="Anterior"></button>
+    <div class="stage" id="stage"></div>
+    <button class="nav next" id="viewer-next" type="button" aria-label="Siguiente"></button>
+  </div>
+
+  <template id="tpl-folder">
+    <a class="folder" href="#">
+      <span class="mosaic"></span>
+      <span class="folder-meta">
+        <span class="folder-name"></span>
+        <span class="folder-count"></span>
+      </span>
+    </a>
+  </template>
+
+  <template id="tpl-tile">
+    <button class="tile" type="button">
+      <img alt="" loading="lazy" decoding="async">
+      <span class="badge" hidden></span>
+    </button>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
