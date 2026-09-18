@@ -29,6 +29,7 @@ from collections import OrderedDict
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any, Literal
 
 # ---------------------------------------------------------------- capacidades
 
@@ -98,7 +99,7 @@ SHOW_HIDDEN = False
 # ---------------------------------------------------------------- utilidades
 
 
-def kind_of(name: str) -> str | None:
+def kind_of(name: str) -> Literal["gif", "image", "video"] | None:
     ext = os.path.splitext(name)[1].lower()
     if ext in GIF_EXT:
         return "gif"
@@ -116,9 +117,13 @@ def is_hidden(name: str) -> bool:
 _num_re = re.compile(r"(\d+)")
 
 
-def natural_key(name: str):
+def natural_key(name: str) -> list[str | int]:
     """Ordena 'foto2' antes que 'foto10'."""
-    return [int(p) if p.isdigit() else p.lower() for p in _num_re.split(name)]
+    return [
+        int(p) if p.isdigit() else p.lower()
+        for p in _num_re.split(name)
+        if isinstance(p, str)
+    ]
 
 
 def rel_of(path: Path) -> str:
@@ -135,9 +140,9 @@ def resolve_rel(rel: str) -> Path:
     return target
 
 
-def scandir_sorted(path: Path):
+def scandir_sorted(path: Path) -> list[Path]:
     try:
-        entries = list(os.scandir(path))
+        entries = list(path.iterdir())
     except OSError:
         return []
     entries.sort(key=lambda e: natural_key(e.name))
@@ -156,11 +161,11 @@ def list_directory(folder: Path) -> dict:
             continue
         try:
             if entry.is_dir(follow_symlinks=False):
-                preview = preview_folder(Path(entry.path))
+                preview = preview_folder(entry)
                 folders.append(
                     {
                         "name": entry.name,
-                        "path": rel_of(Path(entry.path)),
+                        "path": rel_of(entry),
                         "thumbs": preview["thumbs"],
                         "media": preview["media"],
                         "subfolders": preview["subfolders"],
@@ -175,7 +180,7 @@ def list_directory(folder: Path) -> dict:
                 items.append(
                     {
                         "name": entry.name,
-                        "path": rel_of(Path(entry.path)),
+                        "path": rel_of(entry),
                         "kind": kind,
                         "size": stat.st_size,
                         "mtime": int(stat.st_mtime),
@@ -224,11 +229,11 @@ def preview_folder(folder: Path, want: int = 4, budget: int = 500) -> dict:
                     if depth == 0:
                         subfolders += 1
                     if depth < 1:
-                        queue.append((Path(entry.path), depth + 1))
+                        queue.append((entry, depth + 1))
                 elif entry.is_file(follow_symlinks=False) and kind_of(entry.name):
                     media += 1
                     if len(thumbs) < want:
-                        thumbs.append(rel_of(Path(entry.path)))
+                        thumbs.append(rel_of(entry))
             except OSError:
                 continue
 
@@ -242,12 +247,12 @@ def preview_folder(folder: Path, want: int = 4, budget: int = 500) -> dict:
 
 # ---------------------------------------------------------------- miniaturas
 
-_cache: "OrderedDict[tuple, bytes]" = OrderedDict()
+_cache: OrderedDict[tuple[str, int, int], bytes] = OrderedDict()
 _cache_lock = threading.Lock()
 CACHE_MAX = 500
 
 
-def cache_get(key):
+def cache_get(key: tuple[str, int, int]) -> bytes | None:
     with _cache_lock:
         if key in _cache:
             _cache.move_to_end(key)
@@ -255,7 +260,7 @@ def cache_get(key):
     return None
 
 
-def cache_put(key, value):
+def cache_put(key: tuple[str, int, int], value: bytes) -> None:
     with _cache_lock:
         _cache[key] = value
         _cache.move_to_end(key)
@@ -304,7 +309,7 @@ def make_video_thumb(path: Path, size: int) -> bytes | None:
     try:
         out = subprocess.run(cmd, capture_output=True, timeout=20, check=False).stdout
         return out or None
-    except Exception:
+    except OSError:
         return None
 
 
@@ -339,7 +344,13 @@ class Handler(BaseHTTPRequestHandler):
 
     # --- helpers de respuesta
 
-    def _headers(self, status, ctype, length, extra=None):
+    def _headers(
+        self,
+        status: HTTPStatus,
+        ctype: str,
+        length: int,
+        extra: dict[str, str] | None = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(length))
@@ -347,12 +358,18 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
 
-    def send_bytes(self, data: bytes, ctype: str, status=HTTPStatus.OK, extra=None):
+    def send_bytes(
+        self,
+        data: bytes,
+        ctype: str,
+        status: HTTPStatus = HTTPStatus.OK,
+        extra: dict[str, str] | None = None,
+    ) -> None:
         self._headers(status, ctype, len(data), extra)
         if self.command != "HEAD":
             self.wfile.write(data)
 
-    def send_json(self, obj, status=HTTPStatus.OK):
+    def send_json(self, obj: Any, status=HTTPStatus.OK) -> None:
         payload = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_bytes(
             payload,
@@ -361,10 +378,12 @@ class Handler(BaseHTTPRequestHandler):
             {"Cache-Control": "no-store"},
         )
 
-    def send_error_json(self, status, message):
+    def send_error_json(self, status: HTTPStatus, message: str) -> None:
         self.send_json({"error": message}, status)
 
-    def send_file(self, path: Path, cache="no-store", inline=True):
+    def send_file(
+        self, path: Path, cache: str = "no-store", inline: bool = True
+    ) -> None:
         try:
             stat = path.stat()
         except OSError:
@@ -423,10 +442,10 @@ class Handler(BaseHTTPRequestHandler):
 
     # --- rutas
 
-    def do_HEAD(self):
+    def do_HEAD(self) -> None:
         self.do_GET()
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         route = urllib.parse.unquote(parsed.path)
         query = urllib.parse.parse_qs(parsed.query)
@@ -475,7 +494,7 @@ class Handler(BaseHTTPRequestHandler):
 
         self.send_error_json(HTTPStatus.NOT_FOUND, "Ruta desconocida")
 
-    def serve_thumb(self, query):
+    def serve_thumb(self, query: dict[str, list[str]]) -> None:
         path = resolve_rel(query.get("p", [""])[0])
         if not path.is_file() or not kind_of(path.name):
             return self.send_error_json(
@@ -497,7 +516,7 @@ class Handler(BaseHTTPRequestHandler):
         data, ctype = result
         self.send_bytes(data, ctype, extra={"Cache-Control": "public, max-age=86400"})
 
-    def serve_static(self, name: str):
+    def serve_static(self, name: str) -> None:
         target = (STATIC_DIR / name).resolve()
         if STATIC_DIR not in target.parents and target != STATIC_DIR:
             return self.send_error_json(HTTPStatus.FORBIDDEN, "Ruta no permitida")
@@ -511,7 +530,7 @@ class Handler(BaseHTTPRequestHandler):
         data = target.read_bytes()
         self.send_bytes(data, ctype, extra={"Cache-Control": "no-cache"})
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args) -> None:
         if os.environ.get("GALERIA_VERBOSE"):
             sys.stderr.write("%s - %s\n" % (self.address_string(), format % args))
 
