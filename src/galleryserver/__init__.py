@@ -36,7 +36,7 @@ try:
     from PIL import Image, ImageOps
 
     HAS_PIL = True
-except Exception:  # Pillow no instalado
+except ModuleNotFoundError:  # Pillow no instalado
     HAS_PIL = False
 
 FFMPEG = shutil.which("ffmpeg")
@@ -58,7 +58,17 @@ IMAGE_EXT = {
     ".ico",
 }
 GIF_EXT = {".gif"}
-VIDEO_EXT = {".mp4", ".webm", ".mov", ".m4v", ".mkv", ".avi", ".ogv", ".mpg", ".mpeg"}
+VIDEO_EXT = {
+    ".mp4",
+    ".webm",
+    ".mov",
+    ".m4v",
+    ".mkv",
+    ".avi",
+    ".ogv",
+    ".mpg",
+    ".mpeg",
+}
 MEDIA_EXT = IMAGE_EXT | GIF_EXT | VIDEO_EXT
 
 SKIP_DIRS = {
