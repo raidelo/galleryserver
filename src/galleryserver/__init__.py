@@ -550,9 +550,7 @@ def free_port(host: str, port: int) -> int:
     raise SystemExit(f"No hay puertos libres entre {port} y {port + 19}.")
 
 
-def main():
-    global ROOT, SHOW_HIDDEN
-
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sirve una carpeta como galería web.")
     parser.add_argument(
         "directory",
@@ -561,18 +559,24 @@ def main():
         help="carpeta a servir (por defecto: la actual)",
     )
     parser.add_argument(
-        "-p", "--port", type=int, default=8800, help="puerto (por defecto 8800)"
+        "-p", "--port", type=int, default=8800, help="puerto (por defecto: 8800)"
     )
     parser.add_argument(
-        "--host", default="127.0.0.1", help="interfaz; usa 0.0.0.0 para la red local"
+        "--host", default="127.0.0.1", help="interfaz (por defecto: localhost)"
     )
     parser.add_argument(
-        "--all", action="store_true", help="incluye archivos y carpetas ocultos"
+        "-a", "--all", action="store_true", help="incluir archivos y carpetas ocultos"
     )
     parser.add_argument(
-        "--no-browser", action="store_true", help="no abre el navegador"
+        "--no-browser", action="store_true", help="no abrir el navegador"
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    global ROOT, SHOW_HIDDEN
+
+    args = parse_args()
 
     ROOT = Path(args.directory).expanduser().resolve()
     SHOW_HIDDEN = args.all
