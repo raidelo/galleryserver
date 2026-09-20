@@ -29,7 +29,15 @@ from collections import OrderedDict
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
+
+from galleryserver.types_ import (
+    DirectoryFolderListing,
+    DirectoryItemListing,
+    DirectoryListing,
+    FolderPreview,
+    Kind,
+)
 
 # ---------------------------------------------------------------- capacidades
 
@@ -99,7 +107,7 @@ SHOW_HIDDEN = False
 # ---------------------------------------------------------------- utilidades
 
 
-def kind_of(name: str) -> Literal["gif", "image", "video"] | None:
+def kind_of(name: str) -> Kind | None:
     ext = os.path.splitext(name)[1].lower()
     if ext in GIF_EXT:
         return "gif"
@@ -152,9 +160,10 @@ def scandir_sorted(path: Path) -> list[Path]:
 # ---------------------------------------------------------------- escaneo
 
 
-def list_directory(folder: Path) -> dict:
+def list_directory(folder: Path) -> DirectoryListing:
     """Contenido directo de una carpeta + vista previa de cada subcarpeta."""
-    folders, items = [], []
+    folders: list[DirectoryFolderListing] = []
+    items: list[DirectoryItemListing] = []
 
     for entry in scandir_sorted(folder):
         if not SHOW_HIDDEN and is_hidden(entry.name):
@@ -203,7 +212,7 @@ def list_directory(folder: Path) -> dict:
     }
 
 
-def preview_folder(folder: Path, want: int = 4, budget: int = 500) -> dict:
+def preview_folder(folder: Path, want: int = 4, budget: int = 500) -> FolderPreview:
     """Mira dentro de una carpeta (hasta 2 niveles) para sacar miniaturas y cuentas.
 
     El escaneo tiene presupuesto de entradas para que abrir un directorio
