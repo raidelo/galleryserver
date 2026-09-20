@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Galería local: sirve el directorio actual como galería de imágenes, GIFs y vídeos.
 
