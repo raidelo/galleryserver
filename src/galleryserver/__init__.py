@@ -30,6 +30,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from galleryserver.constants import GIF_EXT, IMAGE_EXT, SKIP_DIRS, STATIC_DIR, VIDEO_EXT
 from galleryserver.types_ import (
     DirectoryFolderListing,
     DirectoryItemListing,
@@ -48,60 +49,6 @@ except ModuleNotFoundError:  # Pillow no instalado
     HAS_PIL = False
 
 FFMPEG = shutil.which("ffmpeg")
-
-# ---------------------------------------------------------------- constantes
-
-IMAGE_EXT = {
-    ".jpg",
-    ".jpeg",
-    ".jfif",
-    ".png",
-    ".webp",
-    ".bmp",
-    ".tif",
-    ".tiff",
-    ".avif",
-    ".heic",
-    ".heif",
-    ".ico",
-}
-GIF_EXT = {".gif"}
-VIDEO_EXT = {
-    ".mp4",
-    ".webm",
-    ".mov",
-    ".m4v",
-    ".mkv",
-    ".avi",
-    ".ogv",
-    ".mpg",
-    ".mpeg",
-}
-MEDIA_EXT = IMAGE_EXT | GIF_EXT | VIDEO_EXT
-
-SKIP_DIRS = {
-    "__pycache__",
-    "node_modules",
-    ".git",
-    ".svn",
-    ".hg",
-    ".cache",
-    ".venv",
-    "venv",
-    ".DS_Store",
-    "$RECYCLE.BIN",
-}
-
-STATIC_DIR = Path(__file__).resolve().parent / "static"
-
-mimetypes.add_type("image/avif", ".avif")
-mimetypes.add_type("image/webp", ".webp")
-mimetypes.add_type("video/x-matroska", ".mkv")
-mimetypes.add_type("video/quicktime", ".mov")
-
-# Estado global, fijado en main()
-ROOT = Path.cwd()
-SHOW_HIDDEN = False
 
 # ---------------------------------------------------------------- utilidades
 
