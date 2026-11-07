@@ -4,7 +4,7 @@ Galería local: sirve el directorio actual como galería de imágenes, GIFs y v�
 Uso:
     python gallery.py            # sirve el directorio actual
     python gallery.py ~/Fotos    # sirve otro directorio
-    python gallery.py -p 9000 --no-browser
+    python gallery.py -p 9000
 
 Sin dependencias obligatorias. Si Pillow está instalado se generan miniaturas
 reales; si ffmpeg está en el PATH también se generan para vídeos.
@@ -23,7 +23,6 @@ import subprocess
 import sys
 import threading
 import urllib.parse
-import webbrowser
 from collections import OrderedDict
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -522,9 +521,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-a", "--all", action="store_true", help="incluir archivos y carpetas ocultos"
     )
-    parser.add_argument(
-        "--no-browser", action="store_true", help="no abrir el navegador"
-    )
     return parser.parse_args()
 
 
@@ -554,9 +550,6 @@ def main():
             "Vídeos: sin ffmpeg no hay fotograma de portada; se muestra una ficha con el nombre."
         )
     print("Ctrl+C para parar.")
-
-    if not args.no_browser:
-        threading.Timer(0.6, lambda: webbrowser.open(url)).start()
 
     server = ThreadingHTTPServer((args.host, port), Handler)
     server.daemon_threads = True

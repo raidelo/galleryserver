@@ -20,7 +20,6 @@ Opciones:
 | `-p 9000` | cambia el puerto (si está ocupado busca el siguiente libre) |
 | `--host 0.0.0.0` | accesible desde otros equipos de tu red |
 | `--all` | incluye archivos y carpetas ocultos |
-| `--no-browser` | no abre el navegador al arrancar |
 
 ## Dependencias
 
