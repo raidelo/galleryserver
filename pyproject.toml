@@ -7,7 +7,9 @@ authors = [
     { name = "raidelo", email = "raidelosix@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pillow>=13.0.0",
+]
 
 [project.scripts]
 galleryserver = "galleryserver:main"
