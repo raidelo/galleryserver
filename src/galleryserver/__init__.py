@@ -537,7 +537,7 @@ def main():
         raise SystemExit(f"Falta la carpeta static/ junto a {Path(__file__).name}.")
 
     port = free_port(args.host, args.port)
-    url = f"http://{'localhost' if args.host in ('127.0.0.1', '0.0.0.0') else args.host}:{port}/"
+    url = f"http://{args.host}:{port}/"
 
     print(f"Galería de {ROOT}")
     print(f"Abre {url}")
