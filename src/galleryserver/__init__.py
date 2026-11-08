@@ -556,7 +556,7 @@ def main():
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nServidor parado.")
+        print("\nServidor detenido.")
     finally:
         server.server_close()
 
