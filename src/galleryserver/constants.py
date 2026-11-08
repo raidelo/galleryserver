@@ -48,3 +48,5 @@ mimetypes.add_type("image/avif", ".avif")
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("video/x-matroska", ".mkv")
 mimetypes.add_type("video/quicktime", ".mov")
+
+PACKAGE_NAME = "galleryserver"

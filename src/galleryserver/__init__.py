@@ -29,6 +29,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from galleryserver.config import load_config
 from galleryserver.constants import GIF_EXT, IMAGE_EXT, SKIP_DIRS, STATIC_DIR, VIDEO_EXT
 from galleryserver.types_ import (
     DirectoryFolderListing,
@@ -400,6 +401,15 @@ class Handler(BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self) -> None:
+        client_address = self.address_string()
+        if CONFIG and (
+            CONFIG.blacklist
+            and client_address in CONFIG.blacklist
+            or CONFIG.whitelist
+            and client_address not in CONFIG.whitelist
+        ):
+            return self.send_error_json(HTTPStatus.FORBIDDEN, "Forbidden")
+
         parsed = urllib.parse.urlparse(self.path)
         route = urllib.parse.unquote(parsed.path)
         query = urllib.parse.parse_qs(parsed.query)
@@ -525,7 +535,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    global ROOT, SHOW_HIDDEN
+    global ROOT, SHOW_HIDDEN, CONFIG
 
     args = parse_args()
 
@@ -535,6 +545,8 @@ def main():
         raise SystemExit(f"{ROOT} no es una carpeta.")
     if not STATIC_DIR.is_dir():
         raise SystemExit(f"Falta la carpeta static/ junto a {Path(__file__).name}.")
+
+    CONFIG = load_config()
 
     port = free_port(args.host, args.port)
     url = f"http://{args.host}:{port}/"
